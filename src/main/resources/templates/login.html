@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Authentication — TraceX')}"></head>
+<body class="login-page">
+<main class="login-box">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <div class="brand-icon" style="width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 10px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px;">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <circle cx="12" cy="11" r="2.5" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1 style="font-size: 1.5rem; margin-bottom: 4px;">TraceX Portal</h1>
+    <p class="muted small" style="margin: 0;">Criminal Network Centrality & Evidentiary Review</p>
+  </div>
+
+  <div class="flash bad" th:if="${param.error}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Invalid officer credentials. Check username & password.</span>
+  </div>
+  <div class="flash ok" th:if="${param.logout}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span>Session terminated. Officer signed out safely.</span>
+  </div>
+
+  <form th:action="@{/login}" method="post" class="stack" style="gap: 16px;">
+    <label>
+      Officer Username
+      <input type="text" name="username" autofocus required placeholder="e.g. analyst">
+    </label>
+    <label>
+      Security Passkey
+      <input type="password" name="password" required placeholder="Enter passkey">
+    </label>
+    <button type="submit" class="btn primary" style="width: 100%; padding: 11px; margin-top: 6px;">
+      Authenticate & Access Suite
+    </button>
+  </form>
+
+  <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line);">
+    <p class="muted small" style="margin-bottom: 8px; font-weight: 600;">Fast-Fill Demo Accounts (1-Click Fill):</p>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button type="button" class="badge demo-pill" data-user="analyst" data-pass="analyst123"
+              style="cursor: pointer; text-transform: none; padding: 5px 9px;" title="Click to fill analyst credentials">
+        <span style="color:var(--accent);">●</span> analyst (Upload & Analysis)
+      </button>
+      <button type="button" class="badge demo-pill" data-user="supervisor" data-pass="super123"
+              style="cursor: pointer; text-transform: none; padding: 5px 9px;" title="Click to fill supervisor credentials">
+        <span style="color:var(--ok);">●</span> supervisor (All Permissions)
+      </button>
+      <button type="button" class="badge demo-pill" data-user="auditor" data-pass="audit123"
+              style="cursor: pointer; text-transform: none; padding: 5px 9px;" title="Click to fill auditor credentials">
+        <span style="color:var(--warn);">●</span> auditor (Read-Only)
+      </button>
+    </div>
+  </div>
+</main>
+</body>
+</html>

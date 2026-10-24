@@ -1,0 +1,8 @@
+firId,date,district,accused,phone,vehicle,account,narrative
+FIR-101,2025-01-12,Pune,Rahul Patil,9822011111,MH12AB1234,123456789012,"Accused Rahul Patil was found with stolen goods. Contacted associate Mr. Suresh Kale on 9822022222. Payment made to A/C 345678901234."
+FIR-102,2025-02-03,Pune,R. Patil,9822011111,MH12AB1234,123456789012,"Shri R. Patil seen near the warehouse with vehicle MH 12 AB 1234. Informer says Mr. Imran Sheikh supplied the goods."
+FIR-103,2025-02-20,Pimpri,Sunil Jadhav,9822033333,MH14CD5678,234567890123,"Sunil Jadhav arrested. Phone records show contact with 9822022222. Mr. Suresh Kale is suspected of arranging the deal."
+FIR-104,2025-03-08,Pimpri,Imran Sheikh,9822044444,MH14CD5678,678901234567,"Imran Sheikh questioned about a shared vehicle. Received a transfer from A/C 345678901234."
+FIR-105,2025-03-25,Satara,Vikas More,9822055555,MH11EF9012,456789012345,"Vikas More is linked to the group through calls to 9822022222."
+FIR-106,2025-04-10,Satara,Deepak Pawar,9822066666,,567890123456,"Deepak Pawar is an unrelated cheque fraud case."
+FIR-107,2025-04-18,Pune,Suresh Kale,9822022222,,345678901234,"Suresh Kale identified as the middleman coordinating buyers and suppliers."

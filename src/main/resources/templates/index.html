@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Intelligence Dashboard
+      </h1>
+      <p class="page-subtitle">Real-time network centrality, explainable criminal link analytics, and human review gate.</p>
+    </div>
+  </div>
+
+  <div class="flash ok" th:if="${message}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span th:text="${message}">Success message</span>
+  </div>
+  <div class="flash bad" th:if="${error}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span th:text="${error}">Error message</span>
+  </div>
+
+  <section class="cards">
+    <div class="card">
+      <div class="card-header-icon">
+        <span class="label">Total Entities</span>
+        <div class="card-icon-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <span class="num" th:text="${entities}">0</span>
+      <span class="label">Indexed across database</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header-icon">
+        <span class="label">Network Relationships</span>
+        <div class="card-icon-pill emerald">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+      </div>
+      <span class="num" th:text="${links}">0</span>
+      <span class="label">Direct & indirect links</span>
+    </div>
+
+    <div class="card">
+      <div class="card-header-icon">
+        <span class="label">Key Suspects Evaluated</span>
+        <div class="card-icon-pill amber">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+      </div>
+      <span class="num" th:text="${top != null ? #lists.size(top) : 0}">0</span>
+      <span class="label">Top-tier ranked individuals</span>
+    </div>
+  </section>
+
+  <!-- Quick Search -->
+  <div class="panel" style="padding: 16px 20px;">
+    <form th:action="@{/search}" method="get" class="row" style="margin: 0; justify-content: space-between;">
+      <div class="search-bar-wrapper">
+        <span class="search-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="search" name="q" placeholder="Search target by name, phone number, vehicle plate, or bank account..." required>
+      </div>
+      <button type="submit" class="btn primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Query Target
+      </button>
+    </form>
+  </div>
+
+  <!-- Highest-ranked people table card -->
+  <div class="table-card">
+    <div style="padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+          Highest-Ranked Persons of Interest
+          <span class="badge" style="background:var(--accent-subtle); color:var(--accent); border-color:var(--line);">Top 5 Centrality</span>
+        </h2>
+        <p class="muted small" style="margin: 4px 0 0;">Ranked by 4-factor centrality ensemble: Degree, Betweenness, Closeness, and Eigenvector influence.</p>
+      </div>
+      <a th:href="@{/analysis/key}" class="btn small">View All Key Entities &rarr;</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(top)}" style="padding: 40px 20px; text-align: center;">
+      <p class="muted" style="margin-bottom: 12px;">No centrality scores computed yet. Upload case data and trigger analysis calculation.</p>
+      <a th:href="@{/upload}" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" class="btn primary small">Upload Data</a>
+    </div>
+
+    <div class="scroll" th:unless="${#lists.isEmpty(top)}">
+      <table>
+        <thead>
+          <tr>
+            <th>Individual / Target</th>
+            <th>Centrality Score</th>
+            <th>Evidentiary Basis</th>
+            <th>Human Review Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="k : ${top}">
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge type-person">Person</span>
+                <a th:href="@{/analysis/entity(key=${k.key})}" style="font-weight:600; font-size:0.96rem;" th:text="${k.label}">Rahul Patil</a>
+              </div>
+            </td>
+            <td>
+              <div class="score-pill-container">
+                <span class="score-number" th:text="${#numbers.formatDecimal(k.score, 1, 1)}">84.5</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" th:classappend="${k.score > 50} ? 'high'" th:style="'width:' + ${k.score > 100 ? 100 : k.score} + '%;'"></div>
+                </div>
+              </div>
+            </td>
+            <td class="ev" th:text="${k.evidence}">evidence</td>
+            <td>
+              <span class="badge" th:text="${k.decision}"
+                    th:classappend="${k.decision == 'ACCEPTED'} ? 'ok' : (${k.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span>
+            </td>
+            <td>
+              <a th:href="@{/analysis/entity(key=${k.key})}" class="btn small">Inspect &rarr;</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Run Analysis Trigger -->
+  <div class="panel" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h3 style="margin: 0 0 4px; font-size: 1.05rem;">Re-evaluate Network Topology</h3>
+      <span class="muted small">Recomputes betweenness, eigenvector influence, and threat scoring across all nodes.</span>
+    </div>
+    <form th:action="@{/analysis/run}" method="post" class="inline">
+      <button type="submit" class="btn primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Run Graph Analysis
+      </button>
+    </form>
+  </div>
+</main>
+</body>
+</html>

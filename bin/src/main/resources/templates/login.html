@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body class="login-page">
+<main class="login-box">
+  <h1>TraceX</h1>
+  <p class="muted">Sign in to continue.</p>
+  <div class="flash bad" th:if="${param.error}">Wrong username or password.</div>
+  <div class="flash ok" th:if="${param.logout}">You have been signed out.</div>
+  <form th:action="@{/login}" method="post" class="stack">
+    <label>Username <input type="text" name="username" autofocus required></label>
+    <label>Password <input type="password" name="password" required></label>
+    <button type="submit" class="btn primary">Sign in</button>
+  </form>
+  <p class="muted small">Demo accounts: analyst / analyst123, supervisor / super123, auditor / audit123</p>
+</main>
+</body>
+</html>

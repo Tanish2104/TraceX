@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('System Diagnostic - TraceX')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <div class="panel" style="max-width: 680px; margin: 48px auto; text-align: center; padding: 42px 32px; border-top: 4px solid var(--bad);">
+    
+    <!-- 403 Forbidden / Access Denied Role Alert -->
+    <div th:if="${status == 403 or (message != null and #strings.contains(message, 'Access Denied'))}">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--warn-bg); color: var(--warn); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h1 style="font-size: 1.5rem; margin-bottom: 8px;">Role Permission Restriction (403 Forbidden)</h1>
+      <p class="muted" style="font-size: 0.95rem; margin-bottom: 20px;">
+        The workstation you attempted to access (<code class="mono" th:text="${path != null ? path : '/upload'}">/upload</code>) is restricted. In TraceX's security model, <strong>Auditors have read-only access</strong>. Uploading cases and running graph calculations requires an <strong>Analyst</strong> or <strong>Supervisor</strong> account.
+      </p>
+
+      <div style="background: var(--bg-surface-raised); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 18px; text-align: left; margin-bottom: 24px;">
+        <p style="margin: 0 0 8px; font-weight: 600; font-size: 0.88rem; color: var(--ink);">Available Forensic Roles:</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.84rem; color: var(--muted);">
+          <div><strong style="color:var(--accent);">analyst</strong> / analyst123 &mdash; Upload cases, run analysis, review suspects</div>
+          <div><strong style="color:var(--ok);">supervisor</strong> / super123 &mdash; Full administrative access (upload, review, audit log)</div>
+          <div><strong style="color:var(--warn);">auditor</strong> / audit123 &mdash; Read-only findings & immutable audit trail</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <a th:href="@{/login}" class="btn primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Sign In as Analyst
+        </a>
+        <a th:href="@{/}" class="btn">Return to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Generic Anomaly / Database Alert -->
+    <div th:unless="${status == 403 or (message != null and #strings.contains(message, 'Access Denied'))}">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bad-bg); color: var(--bad); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h1 style="font-size: 1.5rem; margin-bottom: 8px;">System Diagnostic Anomaly</h1>
+      <div class="flash bad" style="text-align: left; margin: 16px 0 24px;"
+           th:text="${message != null and message != ''} ? ${message} : (${error != null and error != ''} ? ${error} : 'The requested resource or entity could not be retrieved from the network graph.')">
+        An unexpected condition was encountered during network query processing.
+      </div>
+
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <a th:href="@{/}" class="btn primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Return to Dashboard
+        </a>
+        <a th:href="@{/upload}" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" class="btn">Go to Case Ingestion</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+</body>
+</html>

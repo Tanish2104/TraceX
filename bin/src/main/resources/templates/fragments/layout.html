@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' - TraceX'">TraceX</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<nav class="nav" th:fragment="nav">
+  <a class="brand" th:href="@{/}">TraceX</a>
+  <a th:href="@{/graph}">Graph</a>
+  <a th:href="@{/analysis/key}">Key entities</a>
+  <a th:href="@{/analysis/path}">Find a link</a>
+  <a th:href="@{/upload}" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')">Upload</a>
+  <a th:href="@{/audit}" sec:authorize="hasAnyRole('AUDITOR','SUPERVISOR')">Audit log</a>
+  <span class="spacer"></span>
+  <span class="who">Signed in as <strong sec:authentication="name">user</strong></span>
+  <form th:action="@{/logout}" method="post" class="inline">
+    <button type="submit" class="linkbtn">Log out</button>
+  </form>
+</nav>
+</body>
+</html>

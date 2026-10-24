@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Upload data')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <h1>Upload data</h1>
+  <div class="flash bad" th:if="${error}" th:text="${error}"></div>
+
+  <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="stack panel">
+    <label>FIR records (CSV)
+      <input type="file" name="fir" accept=".csv">
+      <span class="muted small">Required columns: firId, accused. Optional: date, district, phone, vehicle, account, narrative.</span>
+    </label>
+    <label>Call records (CSV)
+      <input type="file" name="calls" accept=".csv">
+      <span class="muted small">Required columns: callerPhone, receiverPhone. Optional: callCount, lastCallDate.</span>
+    </label>
+    <label>Bank transactions (CSV)
+      <input type="file" name="transactions" accept=".csv">
+      <span class="muted small">Required columns: fromAccount, toAccount. Optional: amount, date.</span>
+    </label>
+    <div><button type="submit" class="btn primary">Upload and extract</button></div>
+  </form>
+
+  <form th:action="@{/upload/sample}" method="post" class="row">
+    <button type="submit" class="btn">Load sample data</button>
+    <span class="muted">Adds a small made-up case with planted links, so you can try the whole flow.</span>
+  </form>
+
+  <section th:each="r : ${reports}" class="panel">
+    <h2 th:text="${r.title}">Report</h2>
+    <p th:if="${r.rowsRead > 0 or r.nodes > 0}">
+      <strong th:text="${r.rowsAccepted}">0</strong> of <strong th:text="${r.rowsRead}">0</strong> rows accepted.
+      Wrote <strong th:text="${r.nodes}">0</strong> entities and <strong th:text="${r.edges}">0</strong> links.
+    </p>
+    <ul th:if="${!r.notes.isEmpty()}" class="notes">
+      <li th:each="n : ${r.notes}" th:text="${n}">note</li>
+    </ul>
+    <div th:if="${r.hasErrors()}">
+      <p class="bad-text">Problems found:</p>
+      <ul class="errors"><li th:each="e : ${r.errors}" th:text="${e}">error</li></ul>
+    </div>
+  </section>
+</main>
+</body>
+</html>

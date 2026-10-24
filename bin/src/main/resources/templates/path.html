@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Find a link')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <h1>Find a link between two entities</h1>
+  <p class="muted">Shows the shortest chain of links, up to 8 steps, in either direction.</p>
+
+  <form th:action="@{/analysis/path}" method="get" class="stack panel">
+    <label>From
+      <select name="from" required>
+        <option value="" disabled th:selected="${from == null}">Choose a starting entity</option>
+        <option th:each="o : ${options}" th:value="${o.key}" th:text="${o.type + ' - ' + o.label}"
+                th:selected="${o.key == from}">PERSON - Name</option>
+      </select>
+    </label>
+    <label>To
+      <select name="to" required>
+        <option value="" disabled th:selected="${to == null}">Choose an end entity</option>
+        <option th:each="o : ${options}" th:value="${o.key}" th:text="${o.type + ' - ' + o.label}"
+                th:selected="${o.key == to}">PERSON - Name</option>
+      </select>
+    </label>
+    <div><button type="submit" class="btn primary">Find link</button></div>
+  </form>
+
+  <section class="panel" th:if="${path != null}">
+    <div class="flash bad" th:if="${!path.found}" th:text="${path.message}">message</div>
+    <ol class="path" th:if="${path.found}">
+      <li th:each="line : ${path.lines}" th:text="${line}">step</li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

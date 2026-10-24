@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Key Entities')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap wide">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 th:text="${heading}">Highest-Ranked Entities</h1>
+      <p class="page-subtitle" th:text="${hint}">
+        Automated centrality ranking requiring investigative officer verification before proceeding to prosecution.
+      </p>
+    </div>
+  </div>
+
+  <div class="flash ok" th:if="${message}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span th:text="${message}">Message</span>
+  </div>
+  <div class="flash bad" th:if="${error}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span th:text="${error}">Error</span>
+  </div>
+
+  <!-- Category Filter Tabs -->
+  <div class="tabs" th:if="${types != null}">
+    <a th:each="t : ${types}" th:href="@{/analysis/key(type=${t})}"
+       th:classappend="${t == type} ? 'active'">
+      <span th:text="${t}">PERSON</span>
+    </a>
+  </div>
+
+  <!-- Empty State -->
+  <div class="panel" th:if="${#lists.isEmpty(list)}" style="text-align: center; padding: 48px 20px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--dim); margin-bottom: 12px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <h3 style="margin-bottom: 6px;">No Ranked Entities Found</h3>
+    <p class="muted" style="max-width: 480px; margin: 0 auto 16px;">There are no scoring results for the selected filter. Upload records and execute network analysis.</p>
+    <a th:href="@{/upload}" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" class="btn primary small">Upload Data &rarr;</a>
+  </div>
+
+  <!-- Entities Table -->
+  <div class="table-card" th:unless="${#lists.isEmpty(list)}">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50px;">Rank</th>
+            <th>Entity Label</th>
+            <th>Type</th>
+            <th>Centrality Score</th>
+            <th>Evidentiary Centrality Rationale</th>
+            <th>Verification Status</th>
+            <th sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" style="min-width: 220px;">Review Decision Gate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="k, stat : ${list}">
+            <td>
+              <span th:if="${stat.count == 1}" class="badge" style="background:rgba(245, 158, 11, 0.2); color:#fbbf24; border-color:#f59e0b; font-weight:800;">#1</span>
+              <span th:if="${stat.count == 2}" class="badge" style="background:rgba(148, 163, 184, 0.2); color:#e2e8f0; border-color:#94a3b8; font-weight:700;">#2</span>
+              <span th:if="${stat.count == 3}" class="badge" style="background:rgba(217, 119, 6, 0.15); color:#f59e0b; border-color:#d97706; font-weight:700;">#3</span>
+              <span th:if="${stat.count > 3}" class="mono muted" style="font-weight:600;" th:text="'#' + ${stat.count}">#4</span>
+            </td>
+            <td>
+              <a th:href="@{/analysis/entity(key=${k.key})}" style="font-weight: 600; font-size: 0.96rem;" th:text="${k.label}">Rahul Patil</a>
+            </td>
+            <td>
+              <span class="badge"
+                    th:classappend="${k.type == 'PERSON'} ? 'type-person' : (${k.type == 'PHONE'} ? 'type-phone' : (${k.type == 'VEHICLE'} ? 'type-vehicle' : (${k.type == 'ACCOUNT'} ? 'type-account' : 'type-location')))"
+                    th:text="${k.type}">PERSON</span>
+            </td>
+            <td>
+              <div class="score-pill-container">
+                <span class="score-number" th:text="${#numbers.formatDecimal(k.score, 1, 1)}">84.5</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" th:classappend="${k.score > 50} ? 'high'" th:style="'width:' + ${k.score > 100 ? 100 : k.score} + '%;'"></div>
+                </div>
+              </div>
+            </td>
+            <td class="ev" th:text="${k.evidence}">evidence description</td>
+            <td>
+              <span class="badge" th:text="${k.decision}"
+                    th:classappend="${k.decision == 'ACCEPTED'} ? 'ok' : (${k.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span>
+            </td>
+            <td sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')">
+              <form th:action="@{/review}" method="post" class="stack tight">
+                <input type="hidden" name="key" th:value="${k.key}">
+                <input type="hidden" name="label" th:value="${k.label}">
+                <input type="hidden" name="type" th:value="${type}">
+                <input type="hidden" name="back" value="list">
+                <input type="text" name="note" placeholder="Audit reasoning (optional)" maxlength="200" style="padding: 5px 8px; font-size: 0.8rem;">
+                <div style="display:flex; gap: 6px;">
+                  <button type="submit" name="decision" value="ACCEPTED" class="btn ok small" title="Verify and accept this flag">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    Accept
+                  </button>
+                  <button type="submit" name="decision" value="REJECTED" class="btn bad small" title="Reject as false positive">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Reject
+                  </button>
+                </div>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>

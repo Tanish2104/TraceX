@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Entity detail')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <p><a th:href="@{/analysis/key}">&larr; Back to key entities</a></p>
+  <h1 th:text="${entity.label}">Name</h1>
+  <p>
+    <span class="badge" th:text="${entity.type}">PERSON</span>
+    <span class="badge" th:text="${entity.decision}"
+          th:classappend="${entity.decision == 'ACCEPTED'} ? 'ok' : (${entity.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span>
+  </p>
+  <div class="flash ok" th:if="${message}" th:text="${message}"></div>
+  <div class="flash bad" th:if="${error}" th:text="${error}"></div>
+
+  <section class="panel">
+    <h2>Why this entity ranks where it does</h2>
+    <p th:text="${entity.evidence != ''} ? ${entity.evidence} : 'No analysis has been run yet.'">evidence</p>
+    <table class="metrics">
+      <tr><th>Overall score (0 to 100)</th><td th:text="${#numbers.formatDecimal(entity.score, 1, 1)}">0</td></tr>
+      <tr><th>Direct links</th><td th:text="${entity.degree}">0</td></tr>
+      <tr><th>Betweenness (how often it lies on shortest routes)</th><td th:text="${#numbers.formatDecimal(entity.betweenness, 1, 4)}">0</td></tr>
+      <tr><th>Closeness (how near it is to everyone)</th><td th:text="${#numbers.formatDecimal(entity.closeness, 1, 4)}">0</td></tr>
+      <tr><th>Influence (eigenvector or PageRank)</th><td th:text="${#numbers.formatDecimal(entity.eigenvector, 1, 4)}">0</td></tr>
+      <tr><th>Group number</th><td th:text="${entity.community}">0</td></tr>
+    </table>
+  </section>
+
+  <section class="panel" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')">
+    <h2>Your decision</h2>
+    <form th:action="@{/review}" method="post" class="stack">
+      <input type="hidden" name="key" th:value="${entity.key}">
+      <input type="hidden" name="label" th:value="${entity.label}">
+      <input type="hidden" name="back" value="entity">
+      <label>Reason (optional) <input type="text" name="note" maxlength="200"></label>
+      <div>
+        <button type="submit" name="decision" value="ACCEPTED" class="btn ok">Accept this flag</button>
+        <button type="submit" name="decision" value="REJECTED" class="btn bad">Reject this flag</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Direct links</h2>
+    <p class="muted" th:if="${#lists.isEmpty(neighbors)}">This entity has no links.</p>
+    <div class="scroll" th:unless="${#lists.isEmpty(neighbors)}">
+    <table>
+      <thead><tr><th>Linked entity</th><th>Type</th><th>Kind</th><th>Weight</th><th>Source</th></tr></thead>
+      <tbody>
+      <tr th:each="n : ${neighbors}">
+        <td><a th:href="@{/analysis/entity(key=${n.key})}" th:text="${n.label}">Name</a></td>
+        <td th:text="${n.type}">PHONE</td>
+        <td th:text="${n.kind}">OWNS</td>
+        <td th:text="${#numbers.formatDecimal(n.weight, 1, 1)}">1</td>
+        <td th:text="${n.evidence}">FIR</td>
+      </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

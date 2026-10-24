@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Interactive Graph Topology — TraceX')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap wide">
+  <div class="page-header" style="margin-bottom: 16px;">
+    <div class="page-title-group">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent); vertical-align:middle; margin-right:8px;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Criminal Network Graph Topology
+      </h1>
+      <p class="page-subtitle" id="status">Querying graph topology from Neo4j cluster...</p>
+    </div>
+
+    <!-- Node Type Legend -->
+    <div class="legend" style="margin: 0; align-items:center;">
+      <span class="badge type-person">● Person</span>
+      <span class="badge type-phone">● Phone</span>
+      <span class="badge type-vehicle">● Vehicle</span>
+      <span class="badge type-account">● Account</span>
+      <span class="badge type-location">● Location</span>
+    </div>
+  </div>
+
+  <!-- Interactive Controls Bar -->
+  <div class="panel" style="padding: 10px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <button type="button" id="btn-detect-missing" class="btn primary small" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706; color: #fff;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Detect Missing Links
+      </button>
+
+      <button type="button" id="btn-toggle-labels" class="btn small" title="Show or hide relationship labels on lines">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Edge Labels: <span id="labels-state" style="color:var(--muted); margin-left:2px;">Hidden</span>
+      </button>
+
+      <button type="button" id="btn-toggle-locations" class="btn small" title="Show or hide geographic location nodes">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Locations: <span id="locations-state" style="color:var(--ok); margin-left:2px;">Visible</span>
+      </button>
+
+      <button type="button" id="btn-fit" class="btn small" title="Fit whole network on screen">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        Reset Fit
+      </button>
+
+      <button type="button" id="btn-physics" class="btn small" title="Freeze or resume physics layout">
+        Freeze Physics
+      </button>
+
+      <button type="button" id="btn-fullscreen" class="btn small" title="Expand canvas to fullscreen">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        Fullscreen
+      </button>
+
+      <a th:href="@{/upload}" class="btn small" style="display: inline-flex; align-items: center; gap: 6px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload New Case
+      </a>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <input type="search" id="graph-search" placeholder="Search target & focus..." style="padding: 6px 12px; font-size: 0.85rem; width: 200px;">
+    </div>
+  </div>
+
+  <!-- Interactive Network Canvas with Floating Missing Links Drawer -->
+  <div style="position: relative;">
+    <div id="network"></div>
+
+    <!-- Floating Interactive Edge Tooltip Card -->
+    <div id="edge-tooltip"></div>
+
+    <!-- Floating Missing Links Radar Drawer -->
+    <div id="missing-drawer" style="display: none; position: absolute; top: 14px; right: 14px; width: 340px; max-height: 600px; background: var(--bg-glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 100; overflow: hidden; flex-direction: column;">
+      <div style="padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-raised);">
+        <strong style="font-size: 0.92rem; color: var(--warn); display: flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Missing Links Discovered (<span id="missing-count">0</span>)
+        </strong>
+        <button type="button" id="btn-close-drawer" class="linkbtn" style="padding: 2px 6px; font-size: 1.1rem; line-height: 1;">&times;</button>
+      </div>
+
+      <div id="missing-list" style="padding: 12px; overflow-y: auto; max-height: 520px; display: flex; flex-direction: column; gap: 10px;">
+        <!-- Missing link cards injected by JS -->
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script th:src="@{/js/graph.js}"></script>
+</body>
+</html>

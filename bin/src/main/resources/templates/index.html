@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <h1>Dashboard</h1>
+  <div class="flash ok" th:if="${message}" th:text="${message}"></div>
+  <div class="flash bad" th:if="${error}" th:text="${error}"></div>
+
+  <section class="cards">
+    <div class="card"><span class="num" th:text="${entities}">0</span><span>entities in the graph</span></div>
+    <div class="card"><span class="num" th:text="${links}">0</span><span>links between them</span></div>
+  </section>
+
+  <form th:action="@{/search}" method="get" class="row">
+    <input type="search" name="q" placeholder="Search a name, phone, plate or account" required>
+    <button type="submit" class="btn">Search</button>
+  </form>
+
+  <h2>Highest-ranked people</h2>
+  <p class="muted" th:if="${#lists.isEmpty(top)}">
+    No scores yet. Upload data, then run the analysis.
+  </p>
+  <table th:unless="${#lists.isEmpty(top)}">
+    <thead><tr><th>Person</th><th>Score</th><th>Why</th><th>Status</th></tr></thead>
+    <tbody>
+    <tr th:each="k : ${top}">
+      <td><a th:href="@{/analysis/entity(key=${k.key})}" th:text="${k.label}">Name</a></td>
+      <td th:text="${#numbers.formatDecimal(k.score, 1, 1)}">0</td>
+      <td class="ev" th:text="${k.evidence}">evidence</td>
+      <td><span class="badge" th:text="${k.decision}"
+                th:classappend="${k.decision == 'ACCEPTED'} ? 'ok' : (${k.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <form th:action="@{/analysis/run}" method="post" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" class="row">
+    <button type="submit" class="btn primary">Run analysis</button>
+    <span class="muted">Recomputes scores and groups for the whole graph.</span>
+  </form>
+</main>
+</body>
+</html>

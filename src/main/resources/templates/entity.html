@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${entity.label} + ' — Dossier')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap wide">
+  <div style="margin-bottom: 18px;">
+    <a th:href="@{/analysis/key}" class="btn small" style="display:inline-flex; align-items:center; gap:6px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Key Entities
+    </a>
+  </div>
+
+  <div class="flash ok" th:if="${message}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span th:text="${message}">Message</span>
+  </div>
+  <div class="flash bad" th:if="${error}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span th:text="${error}">Error</span>
+  </div>
+
+  <!-- Header Dossier Card -->
+  <div class="panel" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; border-left: 4px solid var(--accent);">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="width: 52px; height: 52px; border-radius: 12px; background: var(--accent-subtle); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;">
+        <span th:text="${#strings.substring(entity.label, 0, 1)}">R</span>
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+          <h1 style="margin: 0; font-size: 1.6rem;" th:text="${entity.label}">Rahul Patil</h1>
+          <span class="badge" th:classappend="${entity.type == 'PERSON'} ? 'type-person' : (${entity.type == 'PHONE'} ? 'type-phone' : 'type-vehicle')" th:text="${entity.type}">PERSON</span>
+          <span class="badge" th:text="${entity.decision}"
+                th:classappend="${entity.decision == 'ACCEPTED'} ? 'ok' : (${entity.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span>
+        </div>
+        <div class="muted small" style="display:flex; gap:12px; align-items:center;">
+          <span>Unique Key: <span class="mono dossier-key-pill" th:text="${entity.key}">person:rahul_patil</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Score Pill -->
+    <div style="text-align: right;">
+      <span class="muted small" style="display:block; text-transform:uppercase; letter-spacing:0.06em;">Centrality Score</span>
+      <span style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent);" th:text="${#numbers.formatDecimal(entity.score, 1, 1)}">84.5</span>
+    </div>
+  </div>
+
+  <!-- Metrics Grid & Evidence -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px;">
+    <!-- Evidence Rationale -->
+    <div class="panel" style="margin:0;">
+      <h2 style="display:flex; align-items:center; gap:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Evidentiary Scoring Rationale
+      </h2>
+      <p style="font-size:0.95rem; line-height:1.6; color:var(--ink-secondary);"
+         th:text="${entity.evidence != ''} ? ${entity.evidence} : 'No automated analysis has been executed for this graph entity yet.'">
+        Evidence summary
+      </p>
+    </div>
+
+    <!-- Centrality Vector Metrics -->
+    <div class="panel" style="margin:0;">
+      <h2>Centrality Breakdown (4-Factor Ensemble)</h2>
+      <table style="font-size:0.88rem;">
+        <tbody>
+          <tr>
+            <td style="color:var(--muted); font-weight:500;">Direct Node Degree (Connections)</td>
+            <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" th:text="${entity.degree}">0</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted); font-weight:500;">Betweenness (Bridge Centrality)</td>
+            <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" th:text="${#numbers.formatDecimal(entity.betweenness, 1, 4)}">0.0000</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted); font-weight:500;">Closeness (Proximity to Network)</td>
+            <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" th:text="${#numbers.formatDecimal(entity.closeness, 1, 4)}">0.0000</td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted); font-weight:500;">Eigenvector Influence</td>
+            <td style="text-align:right; font-weight:700; font-family:var(--font-mono);" th:text="${#numbers.formatDecimal(entity.eigenvector, 1, 4)}">0.0000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Review Gate (Analyst / Supervisor) -->
+  <div class="panel" sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')" style="border-top: 3px solid var(--accent);">
+    <h2 style="display:flex; align-items:center; gap:8px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Human Officer Verification Gate
+    </h2>
+    <p class="muted small" style="margin-bottom:14px;">Recording an acceptance or rejection flags this finding in the permanent forensic audit trail.</p>
+
+    <form th:action="@{/review}" method="post" class="stack">
+      <input type="hidden" name="key" th:value="${entity.key}">
+      <input type="hidden" name="label" th:value="${entity.label}">
+      <input type="hidden" name="back" value="entity">
+      <label>
+        Investigative Justification / Reasoning (Optional)
+        <input type="text" name="note" placeholder="e.g. Verified against FIR-101 and corroborated via banking transfer trail." maxlength="200">
+      </label>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button type="submit" name="decision" value="ACCEPTED" class="btn ok">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Accept Finding Flag
+        </button>
+        <button type="submit" name="decision" value="REJECTED" class="btn bad">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Reject Finding Flag
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Direct Linked Entities Table -->
+  <div class="table-card">
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--line);">
+      <h2 style="margin:0; font-size:1.1rem;">Immediate Network Neighborhood (Direct Links)</h2>
+    </div>
+
+    <div th:if="${#lists.isEmpty(neighbors)}" style="padding: 36px 20px; text-align: center;">
+      <p class="muted">No direct links associated with this entity in the graph database.</p>
+    </div>
+
+    <div class="scroll" th:unless="${#lists.isEmpty(neighbors)}">
+      <table>
+        <thead>
+          <tr>
+            <th>Linked Entity</th>
+            <th>Type</th>
+            <th>Relationship Kind</th>
+            <th>Weight</th>
+            <th>Evidentiary Reference</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="n : ${neighbors}">
+            <td>
+              <a th:href="@{/analysis/entity(key=${n.key})}" style="font-weight:600;" th:text="${n.label}">Entity Label</a>
+            </td>
+            <td>
+              <span class="badge"
+                    th:classappend="${n.type == 'PERSON'} ? 'type-person' : (${n.type == 'PHONE'} ? 'type-phone' : (${n.type == 'VEHICLE'} ? 'type-vehicle' : (${n.type == 'ACCOUNT'} ? 'type-account' : 'type-location')))"
+                    th:text="${n.type}">PHONE</span>
+            </td>
+            <td>
+              <span class="badge" th:text="${n.formattedKind}">OWNS</span>
+            </td>
+            <td class="mono" th:text="${#numbers.formatDecimal(n.weight, 1, 1)}">1.0</td>
+            <td class="ev" th:text="${n.evidence}">FIR-101</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>

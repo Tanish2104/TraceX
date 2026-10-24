@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Missing Link & Path Analysis — TraceX')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap wide">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent); vertical-align:middle; margin-right:8px;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Police Missing Link & Chain Discovery
+      </h1>
+      <p class="page-subtitle">Discovers hidden bridges, shared intermediaries, and indirect criminal pathways connecting unlinked suspects across cases.</p>
+    </div>
+  </div>
+
+  <!-- Custom Target-to-Target Query Form -->
+  <form th:action="@{/analysis/path}" method="get" class="panel">
+    <h2 style="margin-top:0; font-size:1.15rem;">Trace Missing Connection Between Two Targets</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 20px;">
+      <label>
+        Starting Entity Node (Target A)
+        <select name="from" required>
+          <option value="" disabled th:selected="${from == null}">Select origin suspect or entity...</option>
+          <option th:each="o : ${options}" th:value="${o.key}" th:text="${o.type + ' — ' + o.label}"
+                  th:selected="${o.key == from}">PERSON - Rahul Patil</option>
+        </select>
+      </label>
+
+      <label>
+        Target Entity Node (Target B)
+        <select name="to" required>
+          <option value="" disabled th:selected="${to == null}">Select destination suspect or entity...</option>
+          <option th:each="o : ${options}" th:value="${o.key}" th:text="${o.type + ' — ' + o.label}"
+                  th:selected="${o.key == to}">PERSON - Suresh Kale</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="display:flex; justify-content: flex-end;">
+      <button type="submit" class="btn primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Trace Shortest Criminal Pathway
+      </button>
+    </div>
+  </form>
+
+  <!-- Query Results Section: Visual Pathway Stepper -->
+  <section th:if="${path != null}" class="panel" style="border-left: 4px solid var(--accent); margin-bottom: 28px;">
+    <h2 style="margin-top:0;">Investigation Connection Pathway</h2>
+
+    <div class="flash bad" th:if="${!path.found}">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span th:text="${path.message}">No path found between these entities within 8 hops.</span>
+    </div>
+
+    <div th:if="${path.found}">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+        <p class="muted small" style="margin: 0; font-size: 0.95rem;">
+          Forensic connection pathway established across <strong style="color:var(--ink);" th:text="${path.entityCount}">3</strong> entities
+          through <strong style="color:var(--accent);" th:text="${path.linkCount}">2</strong> connecting links.
+        </p>
+        <span class="badge ok" style="font-size:0.75rem;">Verified Indirect Criminal Pathway</span>
+      </div>
+
+      <!-- Step-by-Step Entity Nodes & Relationship Connectors -->
+      <div style="display: flex; flex-direction: column; gap: 0; max-width: 760px; margin: 0 auto 16px;">
+        <div th:each="s : ${path.steps}" style="position: relative;">
+
+          <!-- Entity Node Card (Numbered Stop) -->
+          <div style="display: flex; align-items: center; gap: 14px; background: var(--bg-surface-raised); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 14px 18px; box-shadow: var(--shadow-sm); position: relative; z-index: 2;">
+
+            <!-- Hop Index Pill -->
+            <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0;"
+                 th:style="${s.index == 1} ? 'background: rgba(59,130,246,0.2); color:#60a5fa; border:1px solid #3b82f6;' : (${s.last} ? 'background: rgba(16,185,129,0.2); color:#34d399; border:1px solid #10b981;' : 'background: rgba(245,158,11,0.2); color:#fbbf24; border:1px solid #f59e0b;')"
+                 th:text="${s.index}">1</div>
+
+            <!-- Type Badge -->
+            <span class="badge"
+                  th:classappend="${s.type == 'PERSON'} ? 'type-person' : (${s.type == 'PHONE'} ? 'type-phone' : (${s.type == 'VEHICLE'} ? 'type-vehicle' : 'type-account'))"
+                  th:text="${s.type}">PERSON</span>
+
+            <!-- Entity Label Link -->
+            <div style="flex: 1;">
+              <a th:href="@{/analysis/entity(key=${s.key})}" style="font-weight: 700; font-size: 1.02rem; color: var(--ink); text-decoration: none;"
+                 th:text="${s.label}">Rahul Patil</a>
+              <span th:if="${s.linkEvidence != null and s.linkEvidence != ''}" class="muted small" style="display:block; margin-top:2px;" th:text="${s.linkEvidence}">Case File Note</span>
+            </div>
+
+            <!-- Role Badge -->
+            <span class="badge"
+                  th:style="${s.index == 1} ? 'background:rgba(59,130,246,0.15); color:#93c5fd; border-color:rgba(59,130,246,0.3);' : (${s.last} ? 'background:rgba(16,185,129,0.15); color:#6ee7b7; border-color:rgba(16,185,129,0.3);' : 'background:rgba(245,158,11,0.15); color:#fcd34d; border-color:rgba(245,158,11,0.3);')"
+                  th:text="${s.role}">Origin Target</span>
+          </div>
+
+          <!-- Connection Bridge to Next Node (Hidden for last node) -->
+          <div th:unless="${s.last}" style="display: flex; align-items: center; padding: 12px 0 12px 28px; position: relative;">
+            <!-- Vertical Guide Line -->
+            <div style="position: absolute; left: 30px; top: -4px; bottom: -4px; width: 2px; background: repeating-linear-gradient(to bottom, var(--line-strong) 0, var(--line-strong) 4px, transparent 4px, transparent 8px); z-index: 1;"></div>
+
+            <!-- Link Badge Card -->
+            <div style="margin-left: 24px; display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--accent); border-radius: 20px; padding: 6px 14px; font-size: 0.82rem; color: var(--ink-secondary); position: relative; z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,0.25);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--accent);"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+              <span>Connected via: <strong style="color:var(--accent);" th:text="${s.linkToNext}">Co-accused in FIR</strong></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALL DISCOVERED MISSING LINKS ACROSS ACTIVE CASE -->
+  <div class="table-card" style="margin-top: 10px;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--warn);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Syndicate Missing Links Discovered (Hidden Bridges)
+        </h2>
+        <p class="muted small" style="margin: 4px 0 0;">Pairs of suspects who have no direct records together, but are linked through a shared intermediary, phone, vehicle, or account.</p>
+      </div>
+      <a th:href="@{/graph}" class="btn small">View in Visual Graph &rarr;</a>
+    </div>
+
+    <div th:if="${missingLinks == null or #lists.isEmpty(missingLinks)}" style="padding: 38px 20px; text-align: center;">
+      <p class="muted">No indirect missing links detected. Upload case records to see discovered bridges.</p>
+    </div>
+
+    <div class="scroll" th:unless="${missingLinks == null or #lists.isEmpty(missingLinks)}">
+      <table>
+        <thead>
+          <tr>
+            <th>Suspect A</th>
+            <th>Suspect B</th>
+            <th>Shared Hidden Intermediary</th>
+            <th>Type</th>
+            <th>Police Forensic Rationale</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="m : ${missingLinks}">
+            <td>
+              <a th:href="@{/analysis/entity(key=${m.personAKey})}" style="font-weight: 600;" th:text="${m.personALabel}">Suspect A</a>
+            </td>
+            <td>
+              <a th:href="@{/analysis/entity(key=${m.personBKey})}" style="font-weight: 600;" th:text="${m.personBLabel}">Suspect B</a>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge"
+                      th:classappend="${m.sharedType == 'PERSON'} ? 'type-person' : (${m.sharedType == 'PHONE'} ? 'type-phone' : (${m.sharedType == 'VEHICLE'} ? 'type-vehicle' : 'type-account'))"
+                      th:text="${m.sharedType}">PERSON</span>
+                <span style="font-weight: 600; color: var(--ink);" th:text="${m.sharedLabel}">Intermediary</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" style="background:var(--accent-subtle); color:var(--accent); border-color:var(--line); font-weight:600; font-size:0.8rem;"
+                    th:text="${m.formattedType}">Co-Accused in FIR</span>
+            </td>
+            <td class="ev" th:text="${m.rationale}">Forensic deduction description</td>
+            <td>
+              <a th:href="@{/analysis/path(from=${m.personAKey}, to=${m.personBKey})}" class="btn small">Trace Chain &rarr;</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>

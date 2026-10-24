@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Audit log')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap wide">
+  <h1>Audit log</h1>
+  <p class="muted">Newest 200 entries. Entries can be added but never edited or removed.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>When</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+    <tbody>
+    <tr th:each="e : ${entries}">
+      <td th:text="${#temporals.format(e.createdAt, 'yyyy-MM-dd HH:mm:ss')}">time</td>
+      <td th:text="${e.username}">user</td>
+      <td th:text="${e.action}">action</td>
+      <td class="ev" th:text="${e.details}">details</td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+</main>
+</body>
+</html>

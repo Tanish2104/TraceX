@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Upload Case Data')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent); vertical-align:middle; margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Case Data Ingestion
+      </h1>
+      <p class="page-subtitle">Upload any available investigation datasets (single or multiple CSVs). TraceX auto-detects entities, phones, accounts, and vehicles to construct the network graph.</p>
+    </div>
+  </div>
+
+  <div class="flash ok" th:if="${message}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span th:text="${message}">Success message</span>
+  </div>
+  <div class="flash bad" th:if="${error}">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span th:text="${error}">Error message</span>
+  </div>
+
+  <!-- AI Extraction Status Card -->
+  <div class="panel" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; padding:16px 22px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="width:12px; height:12px; border-radius:50%;"
+           th:style="${nlpStatus != null and #strings.startsWith(nlpStatus, 'ON')} ? 'background:var(--ok); box-shadow:0 0 8px var(--ok);' : 'background:var(--warn); box-shadow:0 0 8px var(--warn);'"></div>
+      <div>
+        <strong style="font-size:0.95rem;">Automated Entity Extraction Engine:</strong>
+        <span class="muted small" th:text="${nlpStatus}">Status</span>
+      </div>
+    </div>
+    <span class="badge" th:classappend="${nlpStatus != null and #strings.startsWith(nlpStatus, 'ON')} ? 'ok' : 'warn'"
+          th:text="${nlpStatus != null and #strings.startsWith(nlpStatus, 'ON')} ? 'NLP Model Active' : 'Regex Rule Fallback'">AI Status</span>
+  </div>
+
+  <!-- PRIMARY UNIFIED UPLOAD: Upload Any Available Case Data -->
+  <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="panel" style="border: 2px dashed var(--accent); padding: 32px 28px; text-align: center;">
+    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h2 style="margin: 0 0 8px; font-size: 1.35rem;">Upload Available Investigation Data</h2>
+    <p class="muted" style="max-width: 620px; margin: 0 auto 20px; font-size: 0.95rem;">
+      Select any available CSV file (or multiple files at once). TraceX automatically inspects your columns &mdash; whether you have FIR suspects, call logs, bank transactions, or a unified case sheet.
+    </p>
+
+    <div style="max-width: 440px; margin: 0 auto 16px;">
+      <input type="file" name="files" multiple accept=".csv" style="padding: 12px; background: var(--bg-surface-raised); border: 1px solid var(--line); border-radius: var(--radius-sm); width: 100%; cursor: pointer;">
+      <span class="muted small" style="display: block; margin-top: 6px;">Select 1 or more CSV files (e.g. case notes, calls, transfers)</span>
+    </div>
+
+    <div style="max-width: 460px; margin: 0 auto 20px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 10px 14px; text-align: left; display: flex; align-items: center; gap: 12px;">
+      <input type="checkbox" id="clearPrevious" name="clearPrevious" value="true" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0;">
+      <label for="clearPrevious" style="font-size: 0.88rem; cursor: pointer; color: var(--fg-default); margin: 0;">
+        <strong style="color: #fff;">Start Fresh Case:</strong> Clear old case data so the graph and metrics show <em>only this newly uploaded case</em>.
+      </label>
+    </div>
+
+    <div>
+      <button type="submit" class="btn primary" style="padding: 11px 28px; font-size: 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Ingest Data & Generate Network Graph
+      </button>
+    </div>
+  </form>
+
+  <!-- Collapsible: Advanced / Separate Categories (Optional) -->
+  <details class="panel" style="margin-top: 18px; cursor: pointer;">
+    <summary style="font-weight: 600; font-size: 0.92rem; color: var(--muted); outline: none;">
+      Advanced: Ingest by Separate Specific Datasets (FIR / Calls / Transactions)
+    </summary>
+    <div style="padding-top: 18px; cursor: default;">
+      <form th:action="@{/upload}" method="post" enctype="multipart/form-data">
+        <div style="margin-bottom: 16px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px;">
+          <input type="checkbox" id="clearPreviousAdv" name="clearPrevious" value="true" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0;">
+          <label for="clearPreviousAdv" style="font-size: 0.88rem; cursor: pointer; color: var(--fg-default); margin: 0;">
+            <strong style="color: #fff;">Start Fresh Case:</strong> Clear old case records before importing these categorized files.
+          </label>
+        </div>
+        <div class="file-card-grid">
+          <div class="file-dropzone-card">
+            <div class="file-card-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="file-card-title">FIR Case Dossiers</span>
+            </div>
+            <input type="file" name="fir" accept=".csv">
+          </div>
+          <div class="file-dropzone-card">
+            <div class="file-card-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ok);"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span class="file-card-title">Call Records (CDR)</span>
+            </div>
+            <input type="file" name="calls" accept=".csv">
+          </div>
+          <div class="file-dropzone-card">
+            <div class="file-card-header">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--warn);"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              <span class="file-card-title">Bank Transactions</span>
+            </div>
+            <input type="file" name="transactions" accept=".csv">
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <button type="submit" class="btn small">Upload Categorized Files</button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  <!-- Preloaded Demonstration Case -->
+  <div class="panel" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h3 style="margin:0 0 4px; font-size:1rem;">Preloaded Demonstration Case Data</h3>
+      <span class="muted small">Injects 7 FIR records, 6 phone links, and 5 financial transfers with planted criminal connections into Neo4j.</span>
+    </div>
+    <form th:action="@{/upload/sample}" method="post" class="inline">
+      <button type="submit" class="btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Load Sample Case Data
+      </button>
+    </form>
+  </div>
+
+  <!-- Reset Case Database -->
+  <div class="panel" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.25);">
+    <div>
+      <h3 style="margin:0 0 4px; font-size:1rem; color:var(--bad);">Reset Investigation Workspace</h3>
+      <span class="muted small">Clear all currently loaded entities and links from the database to start completely fresh with a new case.</span>
+    </div>
+    <form th:action="@{/upload/reset}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to clear all graph records and reset the workspace?');">
+      <button type="submit" class="btn danger" style="padding: 9px 20px; font-size: 0.9rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Clear Current Case Data
+      </button>
+    </form>
+  </div>
+
+  <!-- Ingestion Reports Accordion/Cards -->
+  <div th:if="${reports != null and !#lists.isEmpty(reports)}">
+    <h2 style="margin:28px 0 16px; display:flex; align-items:center; gap:8px;">
+      Ingestion Summary Reports
+      <span class="badge ok">Completed</span>
+    </h2>
+
+    <section th:each="r : ${reports}" class="panel" style="border-left: 4px solid var(--accent);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 th:text="${r.title}" style="margin:0; font-size:1.1rem;">Report Title</h3>
+        <span class="badge" th:classappend="${r.hasErrors()} ? 'warn' : 'ok'"
+              th:text="${r.hasErrors()} ? 'Warnings/Issues Detected' : 'Clean Ingestion'">Status</span>
+      </div>
+
+      <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom:14px;"
+           th:if="${r.rowsRead > 0 or r.nodes > 0}">
+        <div class="card" style="padding:12px 16px;">
+          <span class="num" style="font-size:1.6rem;" th:text="${r.rowsAccepted}">0</span>
+          <span class="label" th:text="'of ' + ${r.rowsRead} + ' rows accepted'">Rows</span>
+        </div>
+        <div class="card" style="padding:12px 16px;">
+          <span class="num" style="font-size:1.6rem; color:var(--accent);" th:text="${r.nodes}">0</span>
+          <span class="label">Graph Entities Created</span>
+        </div>
+        <div class="card" style="padding:12px 16px;">
+          <span class="num" style="font-size:1.6rem; color:var(--ok);" th:text="${r.edges}">0</span>
+          <span class="label">Links Established</span>
+        </div>
+      </div>
+
+      <div th:if="${r.notes != null and !#lists.isEmpty(r.notes)}" style="margin-top:10px;">
+        <p class="muted small" style="font-weight:600; margin-bottom:4px;">Ingestion Audit Notes:</p>
+        <ul style="margin:0; padding-left:20px; font-size:0.88rem; color:var(--ink-secondary);">
+          <li th:each="n : ${r.notes}" th:text="${n}" style="margin-bottom:3px;">Note</li>
+        </ul>
+      </div>
+
+      <div th:if="${r.hasErrors()}" style="margin-top:14px; padding:12px 16px; background:var(--bad-bg); border:1px solid var(--bad-border); border-radius:var(--radius-sm);">
+        <p class="bad-text" style="margin:0 0 6px; font-size:0.88rem;">Anomalies Detected:</p>
+        <ul style="margin:0; padding-left:20px; font-size:0.84rem; color:var(--bad);">
+          <li th:each="e : ${r.errors}" th:text="${e}">Error</li>
+        </ul>
+      </div>
+    </section>
+
+    <div style="margin-top:20px; text-align:right; display:flex; justify-content:flex-end; gap:12px;">
+      <a th:href="@{/graph}" class="btn">View Interactive Graph &rarr;</a>
+      <a th:href="@{/}" class="btn primary">Proceed to Dashboard &rarr;</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

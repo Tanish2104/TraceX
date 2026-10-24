@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Key entities')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <h1 th:text="${heading}">Highest-ranked entities</h1>
+  <p class="muted" th:text="${hint}">hint</p>
+  <div class="flash ok" th:if="${message}" th:text="${message}"></div>
+  <div class="flash bad" th:if="${error}" th:text="${error}"></div>
+
+  <div class="tabs" th:if="${types != null}">
+    <a th:each="t : ${types}" th:href="@{/analysis/key(type=${t})}" th:text="${t}"
+       th:classappend="${t == type} ? 'active'">PERSON</a>
+  </div>
+
+  <p class="muted" th:if="${#lists.isEmpty(list)}">Nothing to show yet. Upload data and run the analysis.</p>
+
+  <div class="scroll" th:unless="${#lists.isEmpty(list)}">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Entity</th><th>Type</th><th>Score</th><th>Group</th><th>Why it ranks here</th><th>Status</th>
+          <th sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')">Review</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="k, stat : ${list}">
+      <td th:text="${stat.count}">1</td>
+      <td><a th:href="@{/analysis/entity(key=${k.key})}" th:text="${k.label}">Name</a></td>
+      <td th:text="${k.type}">PERSON</td>
+      <td th:text="${#numbers.formatDecimal(k.score, 1, 1)}">0</td>
+      <td th:text="${k.community}">0</td>
+      <td class="ev" th:text="${k.evidence}">evidence</td>
+      <td><span class="badge" th:text="${k.decision}"
+                th:classappend="${k.decision == 'ACCEPTED'} ? 'ok' : (${k.decision == 'REJECTED'} ? 'bad' : 'pending')">PENDING</span></td>
+      <td sec:authorize="hasAnyRole('ANALYST','SUPERVISOR')">
+        <form th:action="@{/review}" method="post" class="stack tight">
+          <input type="hidden" name="key" th:value="${k.key}">
+          <input type="hidden" name="label" th:value="${k.label}">
+          <input type="hidden" name="type" th:value="${type}">
+          <input type="hidden" name="back" value="list">
+          <input type="text" name="note" placeholder="Reason (optional)" maxlength="200">
+          <span>
+            <button type="submit" name="decision" value="ACCEPTED" class="btn ok small">Accept</button>
+            <button type="submit" name="decision" value="REJECTED" class="btn bad small">Reject</button>
+          </span>
+        </form>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+</main>
+</body>
+</html>

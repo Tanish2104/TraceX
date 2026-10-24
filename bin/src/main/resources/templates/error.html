@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Problem')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="wrap">
+  <h1>Something went wrong</h1>
+  <div class="flash bad" th:text="${message != null and message != ''} ? ${message} : 'The page could not be shown.'">message</div>
+  <p><a th:href="@{/}">Back to the dashboard</a></p>
+</main>
+</body>
+</html>
